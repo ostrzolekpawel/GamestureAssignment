@@ -1,8 +1,10 @@
 using System;
+using Cysharp.Threading.Tasks;
 using GamestureAssignment.CollectableCollector;
 using GamestureAssignment.CollectableDisplayer;
 using GamestureAssignment.Configs;
 using Osiris.Configs;
+using OsirisGames.EventBroker;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,56 +31,77 @@ namespace GamestureAssignment.UIs
         public void Collect()
         {
             // change view
+            Debug.Log("Collected");
+            _rewardAmount.text = "Collected";
         }
 
         private void UnCollect()
         {
             // change view
+            Debug.Log("UnCollected");
         }
     }
 
-    public class DailyRewards
+    public class DailyRewards : IDisposable // todo also create interface for daily rewards
     {
-        private IConfig<int, Collectable> _dailyRewardConfig;
-
+        private readonly IDailyRewardsProvider<Collectable> _dailyRewardsProvider;
+        private readonly IEventBus _signalBus;
+        private readonly IViewDataProvider<CollectableInfo, CollectableViewData> _viewDataProvider;
         private const int _daysInCalendar = 6;
         private int _currentCollectedDay;
-        private int _nextRewardDuration = 3600 * 24;
-        private float _timer;
+        private int _nextRewardDuration = 3600 * 24; // take those information from config?
         private DateTime _nextRewardAvailable;
         private DailyRewardsCalendar _calendar;
-        private IViewDataProvider<CollectableInfo, CollectableViewData> _viewDataProvider;
+        private IConfig<int, Collectable> _currentDailyRewards;
 
-        private ICollector<Collectable, CollectableCollectorArgs> _collector;
+        private readonly ICollector<Collectable, CollectableCollectorArgs> _collector;
 
         public DailyRewards(
                     IViewDataProvider<CollectableInfo, CollectableViewData> viewDataProvider,
-                    IConfig<int, Collectable> dailyRewardConfig)
+                    ICollector<Collectable, CollectableCollectorArgs> collector,
+                    IDailyRewardsProvider<Collectable> dailyRewarsProvider,
+                    IEventBus signalBus)
         {
             _viewDataProvider = viewDataProvider;
-            _dailyRewardConfig = dailyRewardConfig;
+            _collector = collector;
+            _dailyRewardsProvider = dailyRewarsProvider;
+            _signalBus = signalBus;
+
+            _signalBus.Subscribe<TimeCheatSignal>(IncreaseTimer);
         }
 
-        public void Setup(DailyRewardsCalendar calendar)
+        private void IncreaseTimer(TimeCheatSignal signal)
+        {
+            _nextRewardAvailable = DateTime.UtcNow;
+        }
+
+        public async void Setup(DailyRewardsCalendar calendar)
         {
             _calendar = calendar;
 
+            await CreateViews();
+
+            _calendar.Collected += Collect;
+
+            _nextRewardAvailable = DateTime.UtcNow.AddSeconds(_nextRewardDuration); // ideal take it from somewhere
+        }
+
+        private async UniTask CreateViews()
+        {
+            _currentDailyRewards = await _dailyRewardsProvider.GetDailyRewards();
             for (int i = 0; i < _daysInCalendar; i++)
             {
-                var reward = _dailyRewardConfig.GetData(i);
+                var reward = _currentDailyRewards.GetData(i);
                 var view = _viewDataProvider.GetViewData(reward.Info);
                 _calendar.SetupViews(i, view, reward);
             }
-
-            _nextRewardAvailable = DateTime.UtcNow.AddSeconds(_nextRewardDuration);
         }
 
-        public void Collect()
+        public async void Collect()
         {
-            //
-            var reward = _dailyRewardConfig.GetData(_currentCollectedDay);
+            var reward = _currentDailyRewards.GetData(_currentCollectedDay);
             var view = _calendar.GetView(_currentCollectedDay);
-            _collector.Collect(reward, new CollectableCollectorArgs
+            await _collector.CollectAsync(reward, default, new CollectableCollectorArgs // do cts later
             {
                 View = view
             });
@@ -90,7 +113,7 @@ namespace GamestureAssignment.UIs
 
             if (_currentCollectedDay == 0)
             {
-                // when all finished create new views
+                await CreateViews();
             }
         }
 
@@ -100,5 +123,15 @@ namespace GamestureAssignment.UIs
             var leftTime = DateTime.UtcNow - _nextRewardAvailable;
             _calendar.UpdateInfo(leftTime, isAvailable);
         }
+
+        public void Dispose()
+        {
+            _calendar.Collected -= Collect;
+            _signalBus.Unsubscribe<TimeCheatSignal>(IncreaseTimer);
+        }
+    }
+
+    public class TimeCheatSignal
+    {
     }
 }

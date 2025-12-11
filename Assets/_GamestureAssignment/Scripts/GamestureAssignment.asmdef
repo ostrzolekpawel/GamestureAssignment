@@ -4,7 +4,8 @@
     "references": [
         "OsirisGames.Configs.Core",
         "UniTask",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "OsirisGames.EventBroker.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

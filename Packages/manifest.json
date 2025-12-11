@@ -3,6 +3,7 @@
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.osirisgames.collectablehandler": "https://github.com/ostrzolekpawel/UnityCollectableHandler.git?path=Assets/CollectableHandler",
     "com.osirisgames.configs": "https://github.com/ostrzolekpawel/UnityConfigs.git?path=Assets/Configs",
+    "com.osirisgames.eventbroker": "https://github.com/ostrzolekpawel/UnityEventBroker.git?path=Assets/EventBroker",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.collab-proxy": "2.10.2",
     "com.unity.feature.development": "1.0.1",

@@ -23,6 +23,13 @@
       "dependencies": {},
       "hash": "ac093bc1cff9e45fb9623d72e5a63454223b5401"
     },
+    "com.osirisgames.eventbroker": {
+      "version": "https://github.com/ostrzolekpawel/UnityEventBroker.git?path=Assets/EventBroker",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "84615bdbf3bf72bc177dbc566ef0609adfd01886"
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,

@@ -26,7 +26,35 @@ namespace GamestureAssignment.Configs
         [SerializeField] private int _amount;
 
         public CollectableInfo Info => _info;
-        public int Amount => _amount;
+        public int Amount
+        {
+            get => _amount;
+            set
+            {
+                _amount = value;
+            }
+        }
+
+        public Collectable()
+        {
+        }
+
+        public Collectable(CollectableType type, string code, int amount)
+        {
+            _info = new CollectableInfo(type, code);
+            _amount = amount;
+        }
+
+        public Collectable(CollectableInfo info, int amount)
+        {
+            _info = info;
+            _amount = amount;
+        }
+
+        public override string ToString()
+        {
+            return $"[{Info.Type}, {Info.Code}]: {_amount}";
+        }
     }
 
     [Serializable]
@@ -37,6 +65,12 @@ namespace GamestureAssignment.Configs
 
         public CollectableType Type => _type;
         public string Code => _code;
+
+        public CollectableInfo(CollectableType type, string code)
+        {
+            _type = type;
+            _code = code;
+        }
     }
 
     public enum CollectableSize

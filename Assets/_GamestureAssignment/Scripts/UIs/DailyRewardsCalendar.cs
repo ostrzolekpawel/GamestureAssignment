@@ -16,7 +16,7 @@ namespace GamestureAssignment.UIs
         [SerializeField] private Button _collect;
         [SerializeField] private TextMeshProUGUI _collectStatus; // change it to time / collect
 
-        private Dictionary<int, DailyRewardView> _viewMap = new Dictionary<int, DailyRewardView>();
+        private readonly Dictionary<int, DailyRewardView> _viewMap = new Dictionary<int, DailyRewardView>();
 
         public event Action Collected;
 
