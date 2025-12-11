@@ -1,0 +1,18 @@
+{
+    "name": "GamestureAssignment",
+    "rootNamespace": "GamestureAssignment",
+    "references": [
+        "OsirisGames.Configs.Core",
+        "UniTask",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
