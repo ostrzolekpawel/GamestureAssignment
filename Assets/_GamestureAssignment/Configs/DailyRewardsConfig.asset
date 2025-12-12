@@ -12,45 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8852dca4e6792dc46893743eed7ff816, type: 3}
   m_Name: DailyRewardsConfig
   m_EditorClassIdentifier: 
-  _default:
-    _info:
+  _catalog: {fileID: 11400000, guid: f672507320e85704b9de6a0cf4428979, type: 2}
+  _rewards:
+  - _info:
       _type: 0
       _code: 
-    _amount: 50
-  _views:
-  - _type: 0
-    _data:
-      _info:
-        _type: 0
-        _code: 
-      _amount: 100
-  - _type: 1
-    _data:
-      _info:
-        _type: 1
-        _code: 
-      _amount: 20
-  - _type: 2
-    _data:
-      _info:
-        _type: 2
-        _code: 
-      _amount: 5
-  - _type: 3
-    _data:
-      _info:
-        _type: 3
-        _code: Small
-      _amount: 1
-  - _type: 4
-    _data:
-      _info:
-        _type: 3
-        _code: Medium
-      _amount: 1
-  - _type: 5
-    _data:
-      _info:
-        _type: 4
-        _code: Medium
-      _amount: 1
+    _amount: 100
+  - _info:
+      _type: 1
+      _code: Small
+    _amount: 25
+  - _info:
+      _type: 2
+      _code: 
+    _amount: 30
+  - _info:
+      _type: 3
+      _code: Common
+    _amount: 15
+  - _info:
+      _type: 1
+      _code: Large
+    _amount: 5
+  - _info:
+      _type: 3
+      _code: Rare
+    _amount: 3

@@ -13,30 +13,54 @@ MonoBehaviour:
   m_Name: CollectableViewData
   m_EditorClassIdentifier: 
   _default:
-    _icon: {fileID: 21300000, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
-    _translationKey: 
+    _icon: {fileID: 21300240, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
+    _name: Corn
   _views:
   - _type:
       _type: 0
       _code: 
     _data:
-      _icon: {fileID: 21300058, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
-      _translationKey: 
+      _icon: {fileID: 21300240, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
+      _name: Corn
   - _type:
       _type: 1
-      _code: 
+      _code: Small
     _data:
-      _icon: {fileID: 21300066, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
-      _translationKey: 
+      _icon: {fileID: 21300120, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
+      _name: Wood Small
+  - _type:
+      _type: 1
+      _code: Medium
+    _data:
+      _icon: {fileID: 21300126, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
+      _name: Wood Medium
+  - _type:
+      _type: 1
+      _code: Large
+    _data:
+      _icon: {fileID: 21300122, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
+      _name: Wood Large
   - _type:
       _type: 2
       _code: 
     _data:
-      _icon: {fileID: 21300100, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
-      _translationKey: 
+      _icon: {fileID: 21300064, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
+      _name: Rock
   - _type:
       _type: 3
-      _code: 
+      _code: Common
     _data:
-      _icon: {fileID: 21300180, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
-      _translationKey: 
+      _icon: {fileID: 21300090, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
+      _name: Gem Common
+  - _type:
+      _type: 3
+      _code: Rare
+    _data:
+      _icon: {fileID: 21300094, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
+      _name: Gem Rare
+  - _type:
+      _type: 3
+      _code: Epic
+    _data:
+      _icon: {fileID: 21300096, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
+      _name: Gem Epic
