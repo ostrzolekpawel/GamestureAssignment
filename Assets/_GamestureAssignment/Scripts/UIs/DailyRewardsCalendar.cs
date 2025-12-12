@@ -13,8 +13,10 @@ namespace GamestureAssignment.UIs
     public class DailyRewardsCalendar : MonoBehaviour
     {
         [SerializeField] private List<DailyRewardView> _views;
+        [SerializeField] private DailyRewardView _dailyRewardPrefab; // todo use object pool?
+        [SerializeField] private Transform _container;
         [SerializeField] private Button _collect;
-        [SerializeField] private TextMeshProUGUI _collectStatus; // change it to time / collect
+        [SerializeField] private TextMeshProUGUI _collectStatus;
 
         private readonly Dictionary<int, DailyRewardView> _viewMap = new Dictionary<int, DailyRewardView>();
 
@@ -22,11 +24,6 @@ namespace GamestureAssignment.UIs
 
         private void Awake()
         {
-            for (int i = 0; i < _views.Count; i++)
-            {
-                _viewMap[i] = _views[i];
-            }
-
             _collect.onClick.AddListener(Collect);
         }
 
@@ -35,6 +32,12 @@ namespace GamestureAssignment.UIs
             if (_viewMap.TryGetValue(day, out var view))
             {
                 view.Setup(viewData, reward);
+            }
+            else
+            {
+                var createdView = Instantiate(_dailyRewardPrefab, _container);
+                _viewMap[day] = createdView;
+                createdView.Setup(viewData, reward);
             }
         }
 

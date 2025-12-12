@@ -45,14 +45,14 @@ namespace GamestureAssignment.CollectableDisplayer
 
     public class CollectableViewDataProviderFactory : IViewDataProviderFactory<CollectableViewType, IViewDataProvider<CollectableInfo, CollectableViewData>>
     {
-        private readonly CollectableViewDataProvider _dailyRewardsViewProvider;
         private readonly Dictionary<CollectableViewType, IViewDataProvider<CollectableInfo, CollectableViewData>> _map;
 
-        public CollectableViewDataProviderFactory(IConfig<CollectableInfo, CollectableViewData> dailyRewardsConfig)
+        public CollectableViewDataProviderFactory(IConfig<CollectableInfo, CollectableViewData> dailyRewardsConfig, IConfig<CollectableInfo, CollectableViewData> hudConfig)
         {
             _map = new Dictionary<CollectableViewType, IViewDataProvider<CollectableInfo, CollectableViewData>>
             {
-                [CollectableViewType.DailyReward] = new CollectableViewDataProvider(dailyRewardsConfig)
+                [CollectableViewType.DailyReward] = new CollectableViewDataProvider(dailyRewardsConfig),
+                [CollectableViewType.HUD] = new CollectableViewDataProvider(hudConfig)
             };
         }
 

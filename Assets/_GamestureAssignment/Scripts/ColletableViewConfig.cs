@@ -12,15 +12,14 @@ namespace GamestureAssignment.Configs
 
     public enum CollectableType
     {
-        Money,
-        Gold,
-        Diamonds,
-        Chest,
-        Gift
+        Corn,
+        Wood,
+        Rock,
+        Gem
     }
 
     [Serializable]
-    public class Collectable
+    public struct Collectable
     {
         [SerializeField] private CollectableInfo _info;
         [SerializeField] private int _amount;
@@ -33,10 +32,6 @@ namespace GamestureAssignment.Configs
             {
                 _amount = value;
             }
-        }
-
-        public Collectable()
-        {
         }
 
         public Collectable(CollectableType type, string code, int amount)
@@ -53,12 +48,12 @@ namespace GamestureAssignment.Configs
 
         public override string ToString()
         {
-            return $"[{Info.Type}, {Info.Code}]: {_amount}";
+            return $"{Info}{_amount}";
         }
     }
 
     [Serializable]
-    public struct CollectableInfo // TODO drawer because money, gold don't need code and for other can show predefined menu dropdown
+    public struct CollectableInfo
     {
         [SerializeField] private CollectableType _type;
         [SerializeField] private string _code;
@@ -71,22 +66,34 @@ namespace GamestureAssignment.Configs
             _type = type;
             _code = code;
         }
+
+        public override string ToString()
+        {
+            return $"[{Type}, {Code}]: ";
+        }
     }
 
-    public enum CollectableSize
+    public enum CollectableSizeType
     {
         Small,
         Medium,
         Large
     }
 
+    public enum CollectableRarityType
+    {
+        Common,
+        Rare,
+        Epic
+    }
+
     [Serializable]
     public class CollectableViewData
     {
         [SerializeField] private Sprite _icon;
-        [SerializeField] private string _translationKey;
+        [SerializeField] private string _name;
 
         public Sprite Icon => _icon;
-        public string TranslationKey => _translationKey;
+        public string Name => _name;
     }
 }

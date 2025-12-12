@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using GamestureAssignment.Configs;
+using OsirisGames.EventBroker;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,7 +12,6 @@ namespace GamestureAssignment.CollectableCollector
 {
     public interface ICollector<in TData, in TArgs> // todo change name to collector provider?
     {
-        void Collect(TData data, TArgs args = default);
         UniTask CollectAsync(TData data, CancellationToken token, TArgs args = default);
     }
 
@@ -25,26 +26,41 @@ namespace GamestureAssignment.CollectableCollector
         public ICollectableView View { get; set; }
     }
 
-    public class DefaultCollectableCollector : ICollector<Collectable, CollectableCollectorArgs>
+    public class InventoryCollectableCollector : ICollector<Collectable, CollectableCollectorArgs>
     {
         private readonly IInventory<Collectable, CollectableInfo> _inventory;
+        private readonly IEventBus _signalBus;
 
-        public DefaultCollectableCollector(IInventory<Collectable, CollectableInfo> inventory)
+        public InventoryCollectableCollector(IInventory<Collectable, CollectableInfo> inventory, IEventBus signalBus)
         {
             _inventory = inventory;
-        }
-
-        public void Collect(Collectable data, CollectableCollectorArgs args = null)
-        {
-            _inventory.Add(data);
+            _signalBus = signalBus;
         }
 
         public UniTask CollectAsync(Collectable data, CancellationToken token, CollectableCollectorArgs args = null)
         {
+            var previous = _inventory.Get(data.Info);
             _inventory.Add(data);
+            var current = _inventory.Get(data.Info);
 
+            // todo check if there is view from args
+            _signalBus.Fire(new CollectCollectableSignal(previous, current, (RectTransform)args.View.Image.transform));
             return UniTask.CompletedTask;
         }
+    }
+
+    public class CollectCollectableSignal
+    {
+        public CollectCollectableSignal(Collectable previous, Collectable current, RectTransform collectStartPoint)
+        {
+            Previous = previous;
+            Current = current;
+            CollectStartPoint = collectStartPoint;
+        }
+
+        public Collectable Previous { get; }
+        public Collectable Current { get; }
+        public RectTransform CollectStartPoint { get; }
     }
 
     public interface IInventory<TData, TType>
@@ -63,6 +79,7 @@ namespace GamestureAssignment.CollectableCollector
         {
             var collectable = TakeElement(element.Info);
             collectable.Amount += element.Amount;
+            _collectables[element.Info] = collectable;
             Debug.Log(collectable.ToString());
         }
 
@@ -75,12 +92,14 @@ namespace GamestureAssignment.CollectableCollector
         {
             var collectable = TakeElement(element.Info);
             collectable.Amount -= element.Amount;
+            _collectables[element.Info] = collectable;
         }
 
         public void Set(Collectable element)
         {
             var collectable = TakeElement(element.Info);
             collectable.Amount = element.Amount;
+            _collectables[element.Info] = collectable;
         }
 
         private Collectable TakeElement(CollectableInfo info)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using GamestureAssignment.CollectableCollector;
 using GamestureAssignment.CollectableDisplayer;
@@ -16,8 +17,16 @@ namespace GamestureAssignment.UIs
         [SerializeField] private Image _rewardIcon;
         [SerializeField] private TextMeshProUGUI _rewardAmount;
 
+        private Material _iconMaterialInstance;
+
         public Image Image => _rewardIcon;
         public TextMeshProUGUI Text => _rewardAmount;
+
+        private void Awake()
+        {
+            _iconMaterialInstance = Instantiate(_rewardIcon.material);
+            _rewardIcon.material = _iconMaterialInstance;
+        }
 
         public void Setup(CollectableViewData viewData, Collectable data)
         {
@@ -30,15 +39,21 @@ namespace GamestureAssignment.UIs
 
         public void Collect()
         {
-            // change view
-            Debug.Log("Collected");
             _rewardAmount.text = "Collected";
+            SetGray(true);
         }
 
         private void UnCollect()
         {
-            // change view
-            Debug.Log("UnCollected");
+            SetGray(false);
+        }
+
+        private void SetGray(bool isOn)
+        {
+            if (_iconMaterialInstance != null)
+            {
+                _iconMaterialInstance.SetFloat("_IsOn", isOn ? 1f : 0f);
+            }
         }
     }
 
@@ -47,12 +62,12 @@ namespace GamestureAssignment.UIs
         private readonly IDailyRewardsProvider<Collectable> _dailyRewardsProvider;
         private readonly IEventBus _signalBus;
         private readonly IViewDataProvider<CollectableInfo, CollectableViewData> _viewDataProvider;
-        private const int _daysInCalendar = 6;
+        private int _daysInCalendar = 6;
         private int _currentCollectedDay;
         private int _nextRewardDuration = 3600 * 24; // take those information from config?
         private DateTime _nextRewardAvailable;
         private DailyRewardsCalendar _calendar;
-        private IConfig<int, Collectable> _currentDailyRewards;
+        private IReadOnlyList<Collectable> _currentDailyRewards;
 
         private readonly ICollector<Collectable, CollectableCollectorArgs> _collector;
 
@@ -89,9 +104,11 @@ namespace GamestureAssignment.UIs
         private async UniTask CreateViews()
         {
             _currentDailyRewards = await _dailyRewardsProvider.GetDailyRewards();
-            for (int i = 0; i < _daysInCalendar; i++)
+            _daysInCalendar = _currentDailyRewards.Count;
+
+            for (int i = 0; i < _currentDailyRewards.Count; i++)
             {
-                var reward = _currentDailyRewards.GetData(i);
+                var reward = _currentDailyRewards[i];
                 var view = _viewDataProvider.GetViewData(reward.Info);
                 _calendar.SetupViews(i, view, reward);
             }
@@ -99,7 +116,7 @@ namespace GamestureAssignment.UIs
 
         public async void Collect()
         {
-            var reward = _currentDailyRewards.GetData(_currentCollectedDay);
+            var reward = _currentDailyRewards[_currentCollectedDay];//.GetData(_currentCollectedDay);
             var view = _calendar.GetView(_currentCollectedDay);
             await _collector.CollectAsync(reward, default, new CollectableCollectorArgs // do cts later
             {
@@ -119,8 +136,9 @@ namespace GamestureAssignment.UIs
 
         public void Tick()
         {
-            var isAvailable = DateTime.UtcNow > _nextRewardAvailable;
-            var leftTime = DateTime.UtcNow - _nextRewardAvailable;
+            var now = DateTime.UtcNow;
+            var isAvailable = now > _nextRewardAvailable;
+            var leftTime = now - _nextRewardAvailable;
             _calendar.UpdateInfo(leftTime, isAvailable);
         }
 
@@ -133,5 +151,51 @@ namespace GamestureAssignment.UIs
 
     public class TimeCheatSignal
     {
+    }
+
+    public class HUDMediator : IDisposable
+    {
+        private readonly HudView _hud;
+        private readonly IReadOnlyList<CollectableInfo> _collectables;
+        private readonly IViewDataProvider<CollectableInfo, CollectableViewData> _viewDataProvider;
+        private readonly IEventBus _bus;
+
+        private readonly Dictionary<CollectableInfo, CollectableHud> _viewsByInfo = new Dictionary<CollectableInfo, CollectableHud>();
+
+        public HUDMediator(HudView hud, IReadOnlyList<CollectableInfo> collectables, IViewDataProvider<CollectableInfo, CollectableViewData> viewDataProvider, IEventBus bus)
+        {
+            _hud = hud;
+            _collectables = collectables;
+            _viewDataProvider = viewDataProvider;
+            _bus = bus;
+
+            _bus.Subscribe<CollectCollectableSignal>(OnCollect);
+        }
+
+        public void Setup()
+        {
+            _hud.Setup(_collectables, _viewDataProvider);
+
+            foreach (var view in _hud.Views)
+            {
+                Debug.Log($"Try add: {view.Info}");
+                _viewsByInfo.Add(view.Info, view);
+            }
+        }
+
+        private void OnCollect(CollectCollectableSignal signal)
+        {
+            var info = signal.Current.Info;
+
+            if (_viewsByInfo.TryGetValue(info, out var hudView))
+            {
+                hudView.UpdateInfo(signal);
+            }
+        }
+
+        public void Dispose()
+        {
+            _bus.Unsubscribe<CollectCollectableSignal>(OnCollect);
+        }
     }
 }

@@ -14,35 +14,43 @@ namespace GamestureAssignment
     public class Installer : MonoBehaviour
     {
         [SerializeField] private ConfigScriptable<CollectableInfo, CollectableViewData> _viewConfig;
-        [SerializeField] private ConfigScriptable<int, Collectable> _dailyRewardsConfig;
+        [SerializeField] private ConfigScriptable<CollectableInfo, CollectableViewData> _hudConfig;
+        [SerializeField] private DailyRewardsConfig _dailyRewardsConfig;
+        [SerializeField] private CollectableCatalog _collectableCatalog;
         [SerializeField] private DailyRewardsCalendar _calendar;
+        [SerializeField] private HudView _hudView;
         [SerializeField] private Button _cheatTime;
 
         private IViewDataProviderFactory<CollectableViewType, IViewDataProvider<CollectableInfo, CollectableViewData>> _viewDataProviderFactory;
         private DailyRewards _dailyRewards;
         private IEventBus _signalBus;
+        private HUDMediator _hudMediator;
 
         private void Awake()
         {
             _signalBus = new EventBus();
-            _viewDataProviderFactory = new CollectableViewDataProviderFactory(_viewConfig);
+            _viewDataProviderFactory = new CollectableViewDataProviderFactory(_viewConfig, _hudConfig);
 
-            var viewDataProvider = _viewDataProviderFactory.GetViewProvider(CollectableViewType.DailyReward);
-            var collectorProvider = new DefaultCollectableCollector(new DefaultInventory());
-            var dailyRewardProvider = new ConfigDailyRewardsProvider(_dailyRewardsConfig, 6);
-            _dailyRewards = new DailyRewards(viewDataProvider, collectorProvider, dailyRewardProvider, _signalBus);
+            var viewDataProviderDaily = _viewDataProviderFactory.GetViewProvider(CollectableViewType.DailyReward);
+            var viewDataProviderHud = _viewDataProviderFactory.GetViewProvider(CollectableViewType.HUD);
+            var collectorProvider = new InventoryCollectableCollector(new DefaultInventory(), _signalBus);
+            var dailyRewardProvider = new DailyRewardsConfigProvider(_dailyRewardsConfig);
+            _dailyRewards = new DailyRewards(viewDataProviderDaily, collectorProvider, dailyRewardProvider, _signalBus);
+
+            _hudMediator = new HUDMediator(_hudView, _collectableCatalog.AllCollectables, viewDataProviderHud, _signalBus);
 
             _cheatTime.onClick.AddListener(Cheat);
-        }
-
-        private void Cheat()
-        {
-            _signalBus.Fire(new TimeCheatSignal());
         }
 
         private void Start()
         {
             _dailyRewards.Setup(_calendar);
+            _hudMediator.Setup();
+        }
+
+        private void Cheat()
+        {
+            _signalBus.Fire(new TimeCheatSignal());
         }
 
         private void Update()
@@ -54,6 +62,7 @@ namespace GamestureAssignment
         {
             _dailyRewards?.Dispose();
             _cheatTime.onClick.RemoveListener(Cheat);
+            _hudMediator?.Dispose();
         }
     }
 }
