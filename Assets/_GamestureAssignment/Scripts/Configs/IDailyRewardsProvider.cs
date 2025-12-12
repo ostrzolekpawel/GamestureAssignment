@@ -7,19 +7,4 @@ namespace GamestureAssignment.Configs
     {
         UniTask<IReadOnlyList<T>> GetDailyRewards();
     }
-
-    public class DailyRewardsConfigProvider : IDailyRewardsProvider<Collectable>
-    {
-        private readonly DailyRewardsConfig _config;
-
-        public DailyRewardsConfigProvider(DailyRewardsConfig config)
-        {
-            _config = config;
-        }
-
-        public UniTask<IReadOnlyList<Collectable>> GetDailyRewards()
-        {
-            return UniTask.FromResult<IReadOnlyList<Collectable>>(_config.Rewards);
-        }
-    }
 }

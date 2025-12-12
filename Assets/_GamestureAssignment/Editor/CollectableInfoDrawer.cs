@@ -1,5 +1,5 @@
 using System;
-using GamestureAssignment.Configs;
+using GamestureAssignment.Collectables;
 using UnityEditor;
 using UnityEngine;
 

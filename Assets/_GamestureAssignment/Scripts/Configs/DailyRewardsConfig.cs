@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using GamestureAssignment.Collectables;
 using UnityEngine;
 
 namespace GamestureAssignment.Configs

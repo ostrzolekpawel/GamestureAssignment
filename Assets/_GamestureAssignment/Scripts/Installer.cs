@@ -1,6 +1,6 @@
-using System;
 using GamestureAssignment.CollectableCollector;
 using GamestureAssignment.CollectableDisplayer;
+using GamestureAssignment.Collectables;
 using GamestureAssignment.Configs;
 using GamestureAssignment.UIs;
 using Osiris.Configs;
@@ -17,12 +17,12 @@ namespace GamestureAssignment
         [SerializeField] private ConfigScriptable<CollectableInfo, CollectableViewData> _hudConfig;
         [SerializeField] private DailyRewardsConfig _dailyRewardsConfig;
         [SerializeField] private CollectableCatalog _collectableCatalog;
-        [SerializeField] private DailyRewardsCalendar _calendar;
+        [SerializeField] private CalendarView _calendar;
         [SerializeField] private HudView _hudView;
         [SerializeField] private Button _cheatTime;
 
         private IViewDataProviderFactory<CollectableViewType, IViewDataProvider<CollectableInfo, CollectableViewData>> _viewDataProviderFactory;
-        private DailyRewards _dailyRewards;
+        private Calendar _callendar;
         private IEventBus _signalBus;
         private HUDMediator _hudMediator;
 
@@ -35,7 +35,7 @@ namespace GamestureAssignment
             var viewDataProviderHud = _viewDataProviderFactory.GetViewProvider(CollectableViewType.HUD);
             var collectorProvider = new InventoryCollectableCollector(new DefaultInventory(), _signalBus);
             var dailyRewardProvider = new DailyRewardsConfigProvider(_dailyRewardsConfig);
-            _dailyRewards = new DailyRewards(viewDataProviderDaily, collectorProvider, dailyRewardProvider, _signalBus);
+            _callendar = new Calendar(viewDataProviderDaily, collectorProvider, dailyRewardProvider, _signalBus);
 
             _hudMediator = new HUDMediator(_hudView, _collectableCatalog.AllCollectables, viewDataProviderHud, _signalBus);
 
@@ -44,7 +44,7 @@ namespace GamestureAssignment
 
         private void Start()
         {
-            _dailyRewards.Setup(_calendar);
+            _callendar.Setup(_calendar);
             _hudMediator.Setup();
         }
 
@@ -55,12 +55,12 @@ namespace GamestureAssignment
 
         private void Update()
         {
-            _dailyRewards.Tick();
+            _callendar.Tick();
         }
 
         private void OnDestroy()
         {
-            _dailyRewards?.Dispose();
+            _callendar?.Dispose();
             _cheatTime.onClick.RemoveListener(Cheat);
             _hudMediator?.Dispose();
         }

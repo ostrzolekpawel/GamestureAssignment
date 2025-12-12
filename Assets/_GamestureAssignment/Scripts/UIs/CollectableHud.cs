@@ -1,5 +1,5 @@
 using GamestureAssignment.CollectableCollector;
-using GamestureAssignment.Configs;
+using GamestureAssignment.Collectables;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,8 +10,6 @@ namespace GamestureAssignment.UIs
     {
         [SerializeField] private Image _icon;
         [SerializeField] private TextMeshProUGUI _amount;
-        [SerializeField] private ParticleSystemForceField _forceField;
-        [SerializeField] private ParticleSystem _particleSystemPrefab;
 
         private CollectableInfo _info;
 
@@ -26,9 +24,6 @@ namespace GamestureAssignment.UIs
         public void UpdateInfo(CollectCollectableSignal signal) // more like needed information not just signal
         {
             _amount.text = signal.Current.Amount.ToString();
-            var ps = Instantiate(_particleSystemPrefab, signal.CollectStartPoint);
-
-            ps.externalForces.AddInfluence(_forceField);
             // or just use do tween
             // can do animation based on information previous and current
         }

@@ -1,18 +1,14 @@
 using System;
 using System.Collections.Generic;
-using GamestureAssignment.Configs;
+using GamestureAssignment.Collectables;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GamestureAssignment.UIs
 {
-    /// <summary>
-    /// controls rewards?
-    /// </summary>
-    public class DailyRewardsCalendar : MonoBehaviour
+    public class CalendarView : MonoBehaviour
     {
-        [SerializeField] private List<DailyRewardView> _views;
         [SerializeField] private DailyRewardView _dailyRewardPrefab; // todo use object pool?
         [SerializeField] private Transform _container;
         [SerializeField] private Button _collect;

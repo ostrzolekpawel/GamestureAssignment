@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using GamestureAssignment.CollectableDisplayer;
-using GamestureAssignment.Configs;
+using GamestureAssignment.Collectables;
 using UnityEngine;
 
 namespace GamestureAssignment.UIs
