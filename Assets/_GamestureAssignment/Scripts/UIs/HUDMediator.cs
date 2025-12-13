@@ -1,14 +1,12 @@
-using System;
 using System.Collections.Generic;
 using GamestureAssignment.CollectableCollector;
 using GamestureAssignment.CollectableDisplayer;
 using GamestureAssignment.Collectables;
 using OsirisGames.EventBroker;
-using UnityEngine;
 
 namespace GamestureAssignment.UIs
 {
-    public class HUDMediator : IDisposable
+    public class HudMediator : IHudMediator
     {
         private readonly HudView _hud;
         private readonly IReadOnlyList<CollectableInfo> _collectables;
@@ -17,7 +15,7 @@ namespace GamestureAssignment.UIs
 
         private readonly Dictionary<CollectableInfo, CollectableHud> _viewsByInfo = new Dictionary<CollectableInfo, CollectableHud>();
 
-        public HUDMediator(HudView hud, IReadOnlyList<CollectableInfo> collectables, IViewDataProvider<CollectableInfo, CollectableViewData> viewDataProvider, IEventBus bus)
+        public HudMediator(HudView hud, IReadOnlyList<CollectableInfo> collectables, IViewDataProvider<CollectableInfo, CollectableViewData> viewDataProvider, IEventBus bus)
         {
             _hud = hud;
             _collectables = collectables;
@@ -33,7 +31,6 @@ namespace GamestureAssignment.UIs
 
             foreach (var view in _hud.Views)
             {
-                Debug.Log($"Try add: {view.Info}");
                 _viewsByInfo.Add(view.Info, view);
             }
         }
@@ -44,7 +41,8 @@ namespace GamestureAssignment.UIs
 
             if (_viewsByInfo.TryGetValue(info, out var hudView))
             {
-                hudView.UpdateInfo(signal);
+                hudView.UpdateInfo(signal.Previous, signal.Current);
+                _hud.Collect(signal, hudView);
             }
         }
 

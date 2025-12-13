@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using GamestureAssignment.CollectableCollector;
 using GamestureAssignment.CollectableDisplayer;
 using GamestureAssignment.Collectables;
@@ -17,6 +18,7 @@ namespace GamestureAssignment
         [SerializeField] private ConfigScriptable<CollectableInfo, CollectableViewData> _hudConfig;
         [SerializeField] private DailyRewardsConfig _dailyRewardsConfig;
         [SerializeField] private CollectableCatalog _collectableCatalog;
+        [SerializeField] private FixedDailyRewardPolicy _dailyRewadTimePolicy;
         [SerializeField] private CalendarView _calendar;
         [SerializeField] private HudView _hudView;
         [SerializeField] private Button _cheatTime;
@@ -24,7 +26,7 @@ namespace GamestureAssignment
         private IViewDataProviderFactory<CollectableViewType, IViewDataProvider<CollectableInfo, CollectableViewData>> _viewDataProviderFactory;
         private Calendar _callendar;
         private IEventBus _signalBus;
-        private HUDMediator _hudMediator;
+        private IHudMediator _hudMediator;
 
         private void Awake()
         {
@@ -35,16 +37,17 @@ namespace GamestureAssignment
             var viewDataProviderHud = _viewDataProviderFactory.GetViewProvider(CollectableViewType.HUD);
             var collectorProvider = new InventoryCollectableCollector(new DefaultInventory(), _signalBus);
             var dailyRewardProvider = new DailyRewardsConfigProvider(_dailyRewardsConfig);
-            _callendar = new Calendar(viewDataProviderDaily, collectorProvider, dailyRewardProvider, _signalBus);
+            var timerProvider = new SystemTimeProvider();
+            _callendar = new Calendar(viewDataProviderDaily, collectorProvider, dailyRewardProvider, _dailyRewadTimePolicy, timerProvider, _signalBus);
 
-            _hudMediator = new HUDMediator(_hudView, _collectableCatalog.AllCollectables, viewDataProviderHud, _signalBus);
+            _hudMediator = new HudMediator(_hudView, _collectableCatalog.AllCollectables, viewDataProviderHud, _signalBus);
 
             _cheatTime.onClick.AddListener(Cheat);
         }
 
-        private void Start()
+        private async void Start()
         {
-            _callendar.Setup(_calendar);
+            await _callendar.SetupAsync(_calendar);
             _hudMediator.Setup();
         }
 

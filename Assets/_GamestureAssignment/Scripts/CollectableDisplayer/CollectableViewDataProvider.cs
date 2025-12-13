@@ -1,4 +1,3 @@
-using Cysharp.Threading.Tasks;
 using GamestureAssignment.Collectables;
 using Osiris.Configs;
 
@@ -16,11 +15,6 @@ namespace GamestureAssignment.CollectableDisplayer
         public CollectableViewData GetViewData(CollectableInfo data)
         {
             return _config.GetData(data);
-        }
-
-        public UniTask<CollectableViewData> GetViewDataAsync(CollectableInfo data)
-        {
-            return UniTask.FromResult(_config.GetData(data));
         }
     }
 }

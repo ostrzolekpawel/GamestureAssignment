@@ -1,4 +1,4 @@
-using GamestureAssignment.CollectableCollector;
+using DG.Tweening;
 using GamestureAssignment.Collectables;
 using TMPro;
 using UnityEngine;
@@ -14,6 +14,8 @@ namespace GamestureAssignment.UIs
         private CollectableInfo _info;
 
         public CollectableInfo Info => _info;
+        public Sprite IconSprite => _icon.sprite;
+        public Vector3 IconWorldPosition => _icon.rectTransform.position;
 
         public void Setup(CollectableInfo info, CollectableViewData viewData)
         {
@@ -21,11 +23,22 @@ namespace GamestureAssignment.UIs
             _icon.sprite = viewData.Icon;
         }
 
-        public void UpdateInfo(CollectCollectableSignal signal) // more like needed information not just signal
+        public void UpdateInfo(Collectable previous, Collectable current)
         {
-            _amount.text = signal.Current.Amount.ToString();
-            // or just use do tween
-            // can do animation based on information previous and current
+            _amount.text = current.Amount.ToString();
+
+            int previousAmount = previous.Amount;
+            int currentAmount = current.Amount;
+
+            DOTween.Kill(_amount, complete: false);
+
+            DOVirtual.Int(
+                previousAmount,
+                currentAmount,
+                0.3f, // duration
+                value => _amount.text = value.ToString()
+            ).SetEase(Ease.OutQuad)
+             .SetTarget(_amount);
         }
     }
 }

@@ -13,95 +13,107 @@ namespace GamestureAssignment.UIs
     {
 
     }
-    public class Calendar : IDisposable // todo also create interface for daily rewards
+    public sealed class Calendar : ICalendar
     {
-        private readonly IDailyRewardsProvider<Collectable> _dailyRewardsProvider;
-        private readonly IEventBus _signalBus;
-        private readonly IViewDataProvider<CollectableInfo, CollectableViewData> _viewDataProvider;
-        private int _daysInCalendar = 6;
-        private int _currentCollectedDay;
-        private int _nextRewardDuration = 3600 * 24; // take those information from config?
-        private DateTime _nextRewardAvailable;
-        private CalendarView _calendar;
-        private IReadOnlyList<Collectable> _currentDailyRewards;
-
+        private readonly IDailyRewardsProvider<Collectable> _rewards;
         private readonly ICollectorProvider<Collectable, CollectableCollectorArgs> _collector;
+        private readonly IViewDataProvider<CollectableInfo, CollectableViewData> _viewData;
+        private readonly IEventBus _bus;
+        private readonly ITimeProvider _time;
+        private readonly IDailyRewardTimePolicy _timePolicy;
+
+        private CalendarView _view;
+        private IReadOnlyList<Collectable> _currentRewards;
+        private int _currentDay;
+        private DateTime _nextAvailable;
 
         public Calendar(
-                    IViewDataProvider<CollectableInfo, CollectableViewData> viewDataProvider,
-                    ICollectorProvider<Collectable, CollectableCollectorArgs> collector,
-                    IDailyRewardsProvider<Collectable> dailyRewarsProvider,
-                    IEventBus signalBus)
+            IViewDataProvider<CollectableInfo, CollectableViewData> viewData,
+            ICollectorProvider<Collectable, CollectableCollectorArgs> collector,
+            IDailyRewardsProvider<Collectable> rewards,
+            IDailyRewardTimePolicy timePolicy,
+            ITimeProvider time,
+            IEventBus bus)
         {
-            _viewDataProvider = viewDataProvider;
+            _viewData = viewData;
             _collector = collector;
-            _dailyRewardsProvider = dailyRewarsProvider;
-            _signalBus = signalBus;
+            _rewards = rewards;
+            _timePolicy = timePolicy;
+            _time = time;
+            _bus = bus;
 
-            _signalBus.Subscribe<TimeCheatSignal>(IncreaseTimer);
+            _bus.Subscribe<TimeCheatSignal>(OnTimeCheat);
         }
 
-        private void IncreaseTimer(TimeCheatSignal signal)
+        public async UniTask SetupAsync(CalendarView view)
         {
-            _nextRewardAvailable = DateTime.UtcNow;
+            _view = view;
+            _view.Collected += OnCollected;
+
+            await CreateViewsAsync();
+            ResetTimer();
         }
 
-        public async void Setup(CalendarView calendar)
+        private async UniTask CreateViewsAsync()
         {
-            _calendar = calendar;
+            _currentRewards = await _rewards.GetDailyRewards();
 
-            await CreateViews();
-
-            _calendar.Collected += Collect;
-
-            _nextRewardAvailable = DateTime.UtcNow.AddSeconds(_nextRewardDuration); // ideal take it from somewhere
-        }
-
-        private async UniTask CreateViews()
-        {
-            _currentDailyRewards = await _dailyRewardsProvider.GetDailyRewards();
-            _daysInCalendar = _currentDailyRewards.Count;
-
-            for (int i = 0; i < _currentDailyRewards.Count; i++)
+            for (int i = 0; i < _currentRewards.Count; i++)
             {
-                var reward = _currentDailyRewards[i];
-                var view = _viewDataProvider.GetViewData(reward.Info);
-                _calendar.SetupViews(i, view, reward);
+                var reward = _currentRewards[i];
+                var viewData = _viewData.GetViewData(reward.Info);
+                _view.SetupViews(i, viewData, reward);
             }
         }
 
-        public async void Collect()
+        private async void OnCollected()
         {
-            var reward = _currentDailyRewards[_currentCollectedDay];//.GetData(_currentCollectedDay);
-            var view = _calendar.GetView(_currentCollectedDay);
-            await _collector.CollectAsync(reward, default, new CollectableCollectorArgs // do cts later
-            {
-                View = view
-            });
+            if (_time.UtcNow < _nextAvailable)
+                return;
 
-            _currentCollectedDay = (_currentCollectedDay + 1) % _daysInCalendar;
-            _nextRewardAvailable = DateTime.UtcNow.AddSeconds(_nextRewardDuration); // duplication
+            var reward = _currentRewards[_currentDay];
+            var view = _view.GetView(_currentDay);
+
+            await _collector.CollectAsync(reward, default,
+                new CollectableCollectorArgs { View = view });
 
             view.Collect();
 
-            if (_currentCollectedDay == 0)
+            _currentDay = (_currentDay + 1) % _currentRewards.Count;
+            ResetTimer();
+
+            if (_currentDay == 0)
             {
-                await CreateViews();
+                _view.Finished();
+                await UniTask.Delay(2500);
+                await CreateViewsAsync();
             }
         }
 
         public void Tick()
         {
-            var now = DateTime.UtcNow;
-            var isAvailable = now > _nextRewardAvailable;
-            var leftTime = now - _nextRewardAvailable;
-            _calendar.UpdateInfo(leftTime, isAvailable);
+            var now = _time.UtcNow;
+            var available = now >= _nextAvailable;
+            var timeLeft = _nextAvailable - now;
+
+            _view.UpdateInfo(timeLeft, available);
+        }
+
+        private void ResetTimer()
+        {
+            _nextAvailable = _time.UtcNow + _timePolicy.GetNextRewardDelay(new CalendarContext(_currentDay, _currentRewards.Count));
+        }
+
+        private void OnTimeCheat(TimeCheatSignal _)
+        {
+            _nextAvailable = _time.UtcNow;
         }
 
         public void Dispose()
         {
-            _calendar.Collected -= Collect;
-            _signalBus.Unsubscribe<TimeCheatSignal>(IncreaseTimer);
+            _view.Collected -= OnCollected;
+            _bus.Unsubscribe<TimeCheatSignal>(OnTimeCheat);
         }
     }
+
 }

@@ -23,7 +23,6 @@ namespace GamestureAssignment.CollectableCollector
             _inventory.Add(data);
             var current = _inventory.Get(data.Info);
 
-            // todo check if there is view from args
             _signalBus.Fire(new CollectCollectableSignal(previous, current, (RectTransform)args.View.Image.transform));
             return UniTask.CompletedTask;
         }
